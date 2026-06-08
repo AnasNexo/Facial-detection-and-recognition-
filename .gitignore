@@ -1,0 +1,48 @@
+# Model
+face_model.pkl
+
+# Dataset folders (don't upload personal face images)
+*/
+!face-dataset.py
+!face-preprocess.py
+!face-train.py
+!face-recognition.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+.windsurf/
+.windsurf-server/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# TensorFlow / DeepFace cache
+.deepface/
+*.h5
+*.pb
+saved_model/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb

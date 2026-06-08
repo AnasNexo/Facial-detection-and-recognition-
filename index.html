@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FaceNet Recognition — Real-Time Face ID</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b10;
+      --surface:   #0e1219;
+      --border:    #1c2333;
+      --green:     #00e57a;
+      --green-dim: #00e57a22;
+      --red:       #ff3f5e;
+      --blue:      #3d8fff;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --card:      #111620;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* ── Scanline ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+      pointer-events: none;
+      z-index: 998;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,229,122,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+      50%       { opacity: 1;   transform: translate(-50%,-50%) scale(1.08); }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-dim);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 2px;
+      margin-bottom: 32px;
+      animation: fade-up 0.6s ease both;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(42px, 7vw, 90px);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      animation: fade-up 0.7s 0.1s ease both;
+    }
+
+    h1 span { color: var(--green); }
+
+    .hero-sub {
+      max-width: 560px;
+      color: var(--muted);
+      margin: 24px auto 0;
+      font-size: 14px;
+      animation: fade-up 0.7s 0.2s ease both;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fade-up 0.7s 0.3s ease both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #080b10;
+      font-weight: 500;
+    }
+    .btn-primary:hover { background: #00ff8a; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,122,0.3); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); transform: translateY(-2px); }
+
+    /* ── Pipeline diagram ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin-top: 72px;
+      animation: fade-up 0.7s 0.4s ease both;
+    }
+
+    .pipe-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      min-width: 110px;
+      position: relative;
+    }
+
+    .pipe-step:first-child { border-radius: 4px 0 0 4px; }
+    .pipe-step:last-child  { border-radius: 0 4px 4px 0; }
+
+    .pipe-icon { font-size: 22px; }
+    .pipe-label { font-size: 11px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .pipe-name  { font-size: 13px; color: var(--text); font-weight: 500; }
+
+    .pipe-arrow {
+      color: var(--green);
+      font-size: 18px;
+      padding: 0 4px;
+      opacity: 0.6;
+    }
+
+    /* ── Sections ── */
+    section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 40px;
+    }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 24px; }
+
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 24px;
+      align-items: start;
+      padding: 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .step:hover { border-color: var(--green); transform: translateX(4px); }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--green);
+      opacity: 0.4;
+      line-height: 1;
+    }
+
+    .step h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step p { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--green);
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* ── Architecture cards ── */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .arch-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .arch-card:hover { border-color: var(--green); }
+
+    .arch-card-icon { font-size: 28px; margin-bottom: 16px; }
+
+    .arch-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .arch-card p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .tag {
+      display: inline-block;
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid rgba(0,229,122,0.3);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 2px;
+      margin-top: 12px;
+    }
+
+    /* ── Stats strip ── */
+    .stats {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin: 0;
+      max-width: 100%;
+      padding: 0 24px;
+    }
+
+    .stat {
+      padding: 48px 32px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+    }
+
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 8px; }
+
+    /* ── File structure ── */
+    .file-tree {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 32px;
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .file-tree .dir  { color: var(--blue); }
+    .file-tree .file { color: var(--text); }
+    .file-tree .comment { color: var(--muted); }
+    .file-tree .highlight { color: var(--green); font-weight: 500; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    footer a { color: var(--green); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── Animations ── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      background: rgba(8,11,16,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--green); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--green); }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .pipe-arrow { display: none; }
+      .pipe-step { min-width: 80px; padding: 12px; }
+      .step { grid-template-columns: 1fr; }
+      .step-num { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><span>Face</span>Net Recognition</a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">Pipeline</a></li>
+    <li><a href="#quickstart">Quickstart</a></li>
+    <li><a href="#architecture">Model</a></li>
+    <li><a href="https://github.com/AnasNexo/Facial-detection-and-recognition-" target="_blank">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+
+  <div class="badge">
+    <span class="badge-dot"></span>
+    Transfer Learning · Real-Time · Python
+  </div>
+
+  <h1>Real-Time<br><span>Face Recognition</span></h1>
+
+  <p class="hero-sub">
+    End-to-end pipeline using FaceNet embeddings + SVM classifier.
+    Detect, preprocess, train, and recognise faces live from your webcam — no GPU required.
+  </p>
+
+  <div class="hero-buttons">
+    <a class="btn btn-primary" href="https://github.com/AnasNexo/Facial-detection-and-recognition-" target="_blank">
+      ★ View on GitHub
+    </a>
+    <a class="btn btn-outline" href="#quickstart">
+      Get Started →
+    </a>
+  </div>
+
+  <!-- Pipeline diagram -->
+  <div class="pipeline">
+    <div class="pipe-step">
+      <span class="pipe-icon">📷</span>
+      <span class="pipe-name">Webcam</span>
+      <span class="pipe-label">Input</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="pipe-icon">🔍</span>
+      <span class="pipe-name">MTCNN</span>
+      <span class="pipe-label">Detect</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="pipe-icon">🧠</span>
+      <span class="pipe-name">FaceNet</span>
+      <span class="pipe-label">Embed</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="pipe-icon">⚡</span>
+      <span class="pipe-name">SVM</span>
+      <span class="pipe-label">Classify</span>
+    </div>
+    <span class="pipe-arrow">→</span>
+    <div class="pipe-step">
+      <span class="pipe-icon">✅</span>
+      <span class="pipe-name">Name + %</span>
+      <span class="pipe-label">Output</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat reveal">
+    <div class="stat-num">128</div>
+    <div class="stat-label">Embedding dimensions</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-num">3.3M</div>
+    <div class="stat-label">Pretraining faces</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-num">85%+</div>
+    <div class="stat-label">Typical accuracy</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-num">4</div>
+    <div class="stat-label">Scripts to run</div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <p class="section-label reveal">Pipeline</p>
+  <h2 class="reveal">Four scripts.<br>One working system.</h2>
+
+  <div class="file-tree reveal">
+    <span class="dir">face-recognition/</span><br>
+    │<br>
+    ├── <span class="highlight">face-dataset.py</span>      <span class="comment"># Step 1 — capture ~100 face images</span><br>
+    ├── <span class="highlight">face-preprocess.py</span>   <span class="comment"># Step 2 — align, crop, resize, normalise</span><br>
+    ├── <span class="highlight">face-train.py</span>        <span class="comment"># Step 3 — extract embeddings + train SVM</span><br>
+    ├── <span class="highlight">face-recognition.py</span>  <span class="comment"># Step 4 — real-time webcam recognition</span><br>
+    ├── <span class="file">face_model.pkl</span>       <span class="comment"># saved model (auto-created)</span><br>
+    ├── <span class="dir">daniel/</span>              <span class="comment"># raw captures</span><br>
+    └── <span class="dir">daniel-preprocessed/</span> <span class="comment"># 160×160 aligned crops</span>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- QUICKSTART -->
+<section id="quickstart">
+  <p class="section-label reveal">Quickstart</p>
+  <h2 class="reveal">Up and running<br>in minutes.</h2>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div>
+        <h3>Install dependencies</h3>
+        <p>FaceNet weights (~90 MB) are downloaded automatically on first run.</p>
+        <div class="code-block">pip install -r requirements.txt</div>
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">02</div>
+      <div>
+        <h3>Collect face images</h3>
+        <p>Opens your webcam and captures 100 face images per person using MTCNN detection. Vary your expression and angle slightly for better accuracy.</p>
+        <div class="code-block">python face-dataset.py --name daniel --samples 100
+python face-dataset.py --name mark   --samples 100</div>
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">03</div>
+      <div>
+        <h3>Preprocess</h3>
+        <p>Detects and aligns faces using eye landmarks, crops to face region, resizes to 160×160, and normalises pixel values for FaceNet.</p>
+        <div class="code-block">python face-preprocess.py --names daniel mark
+# or auto-discover all folders:
+python face-preprocess.py --auto</div>
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">04</div>
+      <div>
+        <h3>Train and save the model</h3>
+        <p>Extracts 128-d FaceNet embeddings for every image, trains an SVM classifier, runs cross-validation, and saves the model bundle.</p>
+        <div class="code-block">python face-train.py</div>
+      </div>
+    </div>
+
+    <div class="step reveal">
+      <div class="step-num">05</div>
+      <div>
+        <h3>Recognise in real time</h3>
+        <p>Opens webcam, detects faces, runs them through FaceNet + SVM, and overlays the person's name with confidence %. Faces below 70% show as Unknown.</p>
+        <div class="code-block">python face-recognition.py
+# Press Q to quit</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <p class="section-label reveal">Model</p>
+  <h2 class="reveal">Transfer learning.<br>Zero training from scratch.</h2>
+
+  <div class="arch-grid">
+    <div class="arch-card reveal">
+      <div class="arch-card-icon">🔍</div>
+      <h3>MTCNN</h3>
+      <p>Multi-task Cascaded Convolutional Network. Three-stage cascade detects faces and 5 facial landmarks (eyes, nose, mouth corners) in a single pass.</p>
+      <span class="tag">Detection</span>
+    </div>
+
+    <div class="arch-card reveal">
+      <div class="arch-card-icon">🧬</div>
+      <h3>FaceNet / Inception-ResNet-v2</h3>
+      <p>Pretrained on 3.3M faces across 9,131 identities using Triplet Loss. Maps any face to a 128-d embedding where same-person faces cluster together. Used frozen — no retraining.</p>
+      <span class="tag">Transfer Learning</span>
+    </div>
+
+    <div class="arch-card reveal">
+      <div class="arch-card-icon">⚡</div>
+      <h3>SVM Classifier</h3>
+      <p>RBF-kernel Support Vector Machine with Platt scaling trained on your embeddings. L2-normalises inputs first. Returns calibrated probability scores per identity.</p>
+      <span class="tag">Classification</span>
+    </div>
+
+    <div class="arch-card reveal">
+      <div class="arch-card-icon">🛡️</div>
+      <h3>Unknown Rejection</h3>
+      <p>Any face where max class probability falls below the threshold (default 70%) is labelled "Unknown" in red. Prevents confident mislabelling of strangers.</p>
+      <span class="tag">Safety</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FOOTER -->
+<footer>
+  <p>Built with FaceNet · MTCNN · scikit-learn · OpenCV</p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/AnasNexo/Facial-detection-and-recognition-" target="_blank">GitHub</a> ·
+  </p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

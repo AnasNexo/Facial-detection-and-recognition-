@@ -1,0 +1,11 @@
+# Face Recognition Pipeline — Python dependencies
+# Install with: pip install -r requirements.txt
+
+opencv-python>=4.8.0
+mtcnn>=0.1.1
+deepface>=0.0.90          # wraps FaceNet/Inception-ResNet-v2, auto-downloads weights
+tensorflow>=2.13.0        # required by deepface & mtcnn
+scikit-learn>=1.3.0       # SVM classifier + cross-validation
+numpy>=1.24.0
+joblib>=1.3.0             # model serialisation
+Pillow>=10.0.0            # image I/O
