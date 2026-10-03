@@ -13,7 +13,7 @@ Webcam → MTCNN (detect) → FaceNet (128-d embedding) → SVM (classify) → N
 |Component|Role|
 |-|-|
 |**MTCNN**|Face detection + facial landmark extraction|
-|**FaceNet / Inception-ResNet-v2**|Pretrained on 3.3M faces → extracts 128-d embeddings (frozen, transfer learning)|
+|**FaceNet / Inception-ResNet-v1**|Pretrained on 3.3M faces → extracts 128-d embeddings (frozen, transfer learning)|
 |**SVM (RBF kernel)**|Lightweight classifier trained on your embeddings|
 
 FaceNet was pretrained on VGGFace2 using **Triplet Loss** — it maps faces into a 128-dimensional space where the same person's faces cluster together and different people's faces are pushed apart. We use it as a frozen feature extractor, then train an SVM on top with just your data.
@@ -127,7 +127,7 @@ Pillow
 
 ## 📖 Model Architecture
 
-**FaceNet (Inception-ResNet-v2)**
+**FaceNet (Inception-ResNet-v1)**
 
 * Input: 160×160 RGB face crop, normalised to zero mean / unit variance
 * Output: 128-dimensional L2-normalised embedding vector
