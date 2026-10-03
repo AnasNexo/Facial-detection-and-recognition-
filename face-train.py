@@ -1,7 +1,7 @@
 """
 face-train.py
 -------------
-1. Loads FaceNet (Inception-ResNet-v2) pretrained on VGGFace2 via the
+1. Loads FaceNet (Inception-ResNet-v1) pretrained on VGGFace2 via the
    `deepface` library (zero training cost — pure transfer learning).
 2. Iterates over every *-preprocessed folder and extracts a 128-d
    embedding for each face image.
@@ -28,7 +28,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 import cv2
 
-# We use DeepFace as a clean wrapper around FaceNet/Inception-ResNet-v2
+# We use DeepFace as a clean wrapper around FaceNet/Inception-ResNet-v1
 from deepface import DeepFace
 
 

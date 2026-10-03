@@ -60,7 +60,7 @@ def align_face(image_rgb: np.ndarray, keypoints: dict) -> np.ndarray:
 def normalize_pixels(face_array: np.ndarray) -> np.ndarray:
     """
     Standardise pixel values to zero mean / unit variance (per-image),
-    which is the preprocessing expected by FaceNet/Inception-ResNet-v2.
+    which is the preprocessing expected by FaceNet/Inception-ResNet-v1.
 
     Args:
         face_array: float32 array of shape (160, 160, 3)
