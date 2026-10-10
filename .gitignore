@@ -46,3 +46,9 @@ saved_model/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+
+# Track analysis code; keep downloaded images and generated reports local.
+!analyse/
+analyse/*
+!analyse/load_lfw.py
+!analyse/preprocess.ipynb

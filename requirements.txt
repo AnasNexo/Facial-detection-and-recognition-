@@ -9,3 +9,4 @@ scikit-learn>=1.3.0       # SVM classifier + cross-validation
 numpy>=1.24.0
 joblib>=1.3.0             # model serialisation
 Pillow>=10.0.0            # image I/O
+tf-keras>=2.13.0          # required by deepface

@@ -1,26 +1,16 @@
-# 🎯 FaceNet Real-Time Face Recognition
+# FaceNet Real-Time Face Recognition
 
-A complete end-to-end face recognition pipeline using **transfer learning** — no training a neural network from scratch. Detects, preprocesses, trains, and recognises faces in real time from a webcam with name labels and confidence scores.
+A complete end-to-end face recognition pipeline using **transfer learning** . Detects, preprocesses, trains, and recognises faces in real time from a webcam with name labels and confidence scores.
 
 \---
 
-## 🧠 How It Works
+##  How It Works
 
 ```
 Webcam → MTCNN (detect) → FaceNet (128-d embedding) → SVM (classify) → Name + Confidence %
 ```
 
-|Component|Role|
-|-|-|
-|**MTCNN**|Face detection + facial landmark extraction|
-|**FaceNet / Inception-ResNet-v1**|Pretrained on 3.3M faces → extracts 128-d embeddings (frozen, transfer learning)|
-|**SVM (RBF kernel)**|Lightweight classifier trained on your embeddings|
-
-FaceNet was pretrained on VGGFace2 using **Triplet Loss** — it maps faces into a 128-dimensional space where the same person's faces cluster together and different people's faces are pushed apart. We use it as a frozen feature extractor, then train an SVM on top with just your data.
-
-\---
-
-## 📁 Project Structure
+##  Project Structure
 
 ```
 face-recognition/
@@ -40,7 +30,7 @@ face-recognition/
 
 \---
 
-## 🚀 Quick Start
+
 
 ### 1\. Install dependencies
 
@@ -86,7 +76,7 @@ Press **Q** to quit.
 
 \---
 
-## ⚙️ Configuration
+##  Configuration
 
 |Setting|File|Default|Notes|
 |-|-|-|-|
@@ -97,7 +87,7 @@ Press **Q** to quit.
 
 \---
 
-## 📊 Performance Tips
+##  Performance Tips
 
 * **More people = better Unknown rejection** — the SVM needs contrast between classes
 * **Add an Unknown class** — collect 100 images of people who won't be recognised for the most reliable stranger rejection
@@ -106,7 +96,7 @@ Press **Q** to quit.
 
 \---
 
-## 🛠 Requirements
+## Requirements
 
 * Python 3.9+
 * Webcam
@@ -125,7 +115,7 @@ Pillow
 
 \---
 
-## 📖 Model Architecture
+## Model Architecture
 
 **FaceNet (Inception-ResNet-v1)**
 
@@ -141,8 +131,3 @@ Pillow
 * `predict\_proba()` gives per-class confidence scores shown on screen
 
 \---
-
-## 🤝 Contributing
-
-Pull requests welcome. For major changes please open an issue first.
-

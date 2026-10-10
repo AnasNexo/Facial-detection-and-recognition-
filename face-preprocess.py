@@ -15,7 +15,8 @@ Directory layout:
     Output:  daniel-preprocessed/0001.jpg ...
 
 Requirements:
-    pip install opencv-python mtcnn tensorflow numpy Pillow
+    pip install opencv-python mtcnn tensorflow numpy Pillow tf-keras
+
 """
 
 import cv2
@@ -28,7 +29,6 @@ from PIL import Image
 
 # FaceNet expects 160×160 RGB images
 FACENET_INPUT_SIZE = (160, 160)
-
 
 def align_face(image_rgb: np.ndarray, keypoints: dict) -> np.ndarray:
     """
