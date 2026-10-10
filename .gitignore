@@ -1,48 +1,39 @@
-# Model
-face_model.pkl
-
-# Dataset folders (don't upload personal face images)
-*/
-!face-dataset.py
-!face-preprocess.py
-!face-train.py
-!face-recognition.py
-
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-.eggs/
-
-# Virtual environments
+# Local environments and editor state
+.venv/
 venv/
 env/
-.venv/
-.env/
-
-# IDE
+.env
+.env.*
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
 .vscode/
 .idea/
-*.code-workspace
-.windsurf/
-.windsurf-server/
-
-# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# TensorFlow / DeepFace cache
+# Downloaded images and generated training datasets
+analyse/data/
+analyse/preprocessed_data/
+analyse/rejected_low_sharpness/
+analyse/cropped_faces/
+analyse/cropped_faces_split/
+analyse/cropped_faces_facenet_split/
+analyse/preprocessed_crop_pca_split/
+analyse/quality_results/
+analyse/mtcnn_results/
+analyse/output/
+analyse/model_analysis_report/
+
+# Model weights, fitted estimators and embedding caches
 .deepface/
 *.h5
-*.pb
-saved_model/
+*.keras
+*.joblib
+*.pkl
+*.npz
+*.npy
+*.log
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
+# Included on purpose: notebooks, reference_split, results and report figures

@@ -1,101 +1,114 @@
-# Face recognition with FaceNet
+# Face recognition: PCA and FaceNet512
 
-This project collects face images from a webcam and trains a classifier to recognise the people in those images. MTCNN detects faces, FaceNet produces a 128-value embedding for each face, and an SVM predicts the person's name.
+I built this project to compare two ways of recognizing faces: learning a compact representation with PCA, and using embeddings from a pretrained FaceNet512 model. Both approaches use the same images and the same train/test split, so I can compare the classifiers on a common basis.
 
-FaceNet uses pretrained weights. Training fits the SVM to the people in your dataset. During webcam recognition, the program displays a name and a classifier confidence score.
+The workflow covers image quality checks, MTCNN detection, face selection, eye alignment, training, and evaluation. The notebooks include the reasoning behind the preprocessing choices and a closer look at the mistakes each model makes.
 
-## Setup
+## Results
 
-Use Python 3.10 or newer and a webcam. Run the following from the project folder:
+The experiment starts with 500 LFW images across 10 identities. After one manual exclusion and one low-sharpness rejection, 498 images remain: 398 for training and 100 for testing, with 10 test images per identity.
+
+| Approach | Test accuracy | Macro precision | Macro recall | Macro F1 | CV macro F1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| FaceNet512 + linear SVM | 95% | 95.18% | 95% | 94.99% | 92.96% |
+| FaceNet512 + RBF SVM | 95% | 95.18% | 95% | 94.99% | 93.71% |
+| FaceNet512 + kNN | 93% | 93.59% | 93% | 93.02% | 91.08% |
+| PCA + linear SVM | 96% | 96.42% | 96% | 95.98% | 84.26% |
+| PCA + RBF SVM | 97% | 97.27% | 97% | 96.93% | 87.99% |
+
+![Test metrics for the five models](analyse/figures/test_metrics.png)
+
+PCA with an RBF SVM has the highest accuracy on this particular test split. FaceNet with an RBF SVM has the strongest cross-validation macro F1. With only 100 test images, one mistake changes accuracy by one percentage point. The paired comparisons do not establish a statistically significant winner after Holm correction.
+
+These are results for classification among ten known identities. They do not measure recognition of unknown people, face verification, or live camera performance.
+
+## Project layout
+
+```text
+analyse/
+  load_lfw.py                       Download and select the LFW sample
+  prepare_data.py                   Recreate the pre-filter working dataset
+  preprocess_analyse_ameliore.ipynb Quality checks, selection galleries and shared split
+  preprocess_pca.py                Aligned 80 x 80 grayscale inputs
+  preprocess_facenet.py            Aligned 160 x 160 RGB inputs
+  train_pca.py                     PCA with linear and RBF SVM
+  train_facenet_transfert.py       Frozen FaceNet512 with SVM and kNN
+  analyse_resultat.ipynb           Executed English results notebook
+  analyse_resultat.py              Plot and table helpers for the results notebook
+  reference_split/                 Original split, source hashes and duplicate candidates
+  results/                         Numeric snapshot of the completed experiment
+  figures/                         English comparison plots
+  REPORT.md                        Evaluation protocol and interpretation
+```
+
+Datasets, pretrained weights, fitted models, and embedding caches are excluded from Git. The results notebook has saved outputs, so its tables and charts are visible on GitHub without downloading the images. The preprocessing notebook is included without its large image-gallery outputs; run it locally to inspect the sources and selected faces.
+
+## Run the project
+
+Use Python 3.10 or 3.11. From the repository root:
 
 ```bash
-python -m pip install -r requirements.txt tf-keras
+python -m venv .venv
 ```
 
-DeepFace downloads the FaceNet weights the first time they are needed, so the first training run requires an internet connection.
+Activate the environment:
 
-## Collect images
-
-Create a folder of webcam captures for each person. For example:
+```powershell
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
 
 ```bash
-python face-dataset.py --name daniel --samples 100
-python face-dataset.py --name mark --samples 100
+# Linux / macOS
+source .venv/bin/activate
 ```
 
-The images are saved in `daniel/` and `mark/`. Move your head slightly while collecting samples and try different lighting and expressions. Press `q` to stop capture early.
-
-## Prepare the faces
-
-Open `face-preprocess.py` and set the `names` list near the bottom to match your folders:
-
-```python
-names = ["daniel", "mark"]
-```
-
-Then run:
+Then install the dependencies and prepare the sample:
 
 ```bash
-python face-preprocess.py
+python -m pip install -r requirements.txt
+python analyse/load_lfw.py
+python analyse/prepare_data.py
+python -m notebook
 ```
 
-The script detects and aligns faces, then saves 160 by 160 pixel crops in folders such as `daniel-preprocessed/` and `mark-preprocessed/`. Check these images before training, especially any failed detections or poor crops reported by the script.
+Open `analyse/preprocess_analyse_ameliore.ipynb` and run it from top to bottom. Inspect the ambiguous and multiple-face galleries. Section 11 backs up and removes sources with Laplacian variance below 20, then exports one face per source. Section 13 creates the shared stratified 80/20 split with seed 42 and checks for duplicate leakage.
 
-## Train the classifier
+The preparation script reproduces the recorded manual exclusion, `George_W_Bush_0039.jpg`. The sharpness filter rejects `John_Ashcroft_0043.jpg` in the recorded run. The committed reference manifest records the exact original membership and pixel hashes; compare regenerated manifests with it before interpreting a rerun as the same experiment. Detector and numerical-library changes can affect results.
 
-You need images for at least two people. Run:
+Prepare the two input formats and train:
 
 ```bash
-python face-train.py
+python analyse/preprocess_pca.py
+python analyse/preprocess_facenet.py
+python -u analyse/train_pca.py
+python -u analyse/train_facenet_transfert.py
 ```
 
-The script reads the `*-preprocessed` folders, extracts FaceNet embeddings, and trains an SVM. It prints cross-validation accuracy when enough samples are available and saves the classifier and labels in `face_model.pkl`.
+Training progress prints in the terminal and is saved in each model's results directory. The first FaceNet run downloads its weights. CPU execution works; embedding extraction takes most of the FaceNet runtime.
 
-## Run webcam recognition
+PCA results are written to `analyse/preprocessed_crop_pca_split/pca_results/`. FaceNet results go to `analyse/cropped_faces_facenet_split/facenet_transfer_results/`. Each contains metrics, predictions, confusion matrices, settings, and fitted classifiers. The committed `analyse/results/` directory is a snapshot of the completed experiment; a new training run writes to the local directories above and does not silently replace that snapshot.
 
-```bash
-python face-recognition.py
-```
+To view or regenerate the published comparison charts, run `analyse/analyse_resultat.ipynb`. It reads the included numeric snapshot and requires no face images or model weights. See [the full report](analyse/REPORT.md) for validation details and limitations.
 
-Press `q` to close the webcam window. To use another camera or reduce how often detection runs:
+## Preprocessing and training choices
 
-```bash
-python face-recognition.py --camera 1 --skip_frames 2
-```
+- **Face selection:** MTCNN detects faces and landmarks. A heuristic combines relative box area (60%), centrality (35%), and confidence (5%). One face is retained per source, and ambiguous cases can be reviewed in a gallery.
+- **PCA:** align eyes from the original source, resize to 80 x 80, convert to grayscale, and scale pixels to `[0, 1]`. PCA is fitted inside each cross-validation fold. No CLAHE or gamma correction is applied.
+- **FaceNet512:** align the same selected face from source landmarks and save a 160 x 160 RGB PNG with pixels in `[0, 255]`. DeepFace applies `normalization="Facenet"` during `represent`, with `detector_backend="skip"` and `align=False`. L2-normalize the 512-dimensional embeddings before classification.
+- **Transfer learning:** FaceNet weights remain frozen. Only the SVM or kNN classifier is fitted; no FaceNet fine-tuning is performed.
+- **Validation:** select hyperparameters by macro F1 using five training folds, grouping flagged near-duplicate sources together. The two input families retain the same train/test membership.
 
-You can load a different saved model with `--model path/to/model.pkl`.
+## What I would test next
 
-The current recognition threshold is `0.70` in `face-recognition.py`. Predictions below it are displayed as `Unknown`. This score comes from the classifier; it should be checked against separate test images before choosing a threshold for your dataset.
+I would collect a larger, independent test set before changing the pipeline based on these results. Then I would compare stronger regularization for PCA, inspect the recurring errors and face selections, and test more identities and different capture conditions. Fine-tuning FaceNet would need substantially more varied training data and a separate validation protocol.
 
-## Files
+## Data and dependencies
 
-| File | Purpose |
-| --- | --- |
-| `face-dataset.py` | Collect webcam images for a person |
-| `face-preprocess.py` | Detect, align, and resize faces |
-| `face-train.py` | Extract embeddings and train the SVM |
-| `face-recognition.py` | Recognise faces from a webcam |
-| `requirements.txt` | Python dependencies |
-| `index.html` | Project overview page |
+The images come from [Labeled Faces in the Wild](https://vis-www.cs.umass.edu/lfw/). `load_lfw.py` downloads the funneled archive from the mirror used by scikit-learn and verifies its SHA-256 checksum. Images are not redistributed in this repository; consult the dataset's terms before using them.
 
-Image folders, downloaded model weights, and the saved classifier are kept out of Git.
+This project uses [DeepFace](https://github.com/serengil/deepface), [MTCNN](https://github.com/ipazc/mtcnn), [scikit-learn](https://scikit-learn.org/), OpenCV, TensorFlow, NumPy, pandas, and Matplotlib. Their code and pretrained weights remain subject to their respective licenses and terms.
 
-## Dataset analysis
+## Previous version
 
-The [analysis branch](https://github.com/AnasNexo/Facial-detection-and-recognition-/tree/analysis/image-quality-eda) contains the LFW loader and the [EDA notebook](https://github.com/AnasNexo/Facial-detection-and-recognition-/blob/analysis/image-quality-eda/analyse/preprocess.ipynb).
-
-The notebook covers class counts, image dimensions, exact and near duplicates, lighting, contrast, sharpness, and MTCNN detection measurements. Its tables and example images are saved inline. Downloaded images and generated report folders remain local.
-
-To run the notebook on that branch, install its additional dependencies and select the same Python environment in your notebook editor:
-
-```bash
-python -m pip install pandas matplotlib ipykernel
-```
-
-Run `python analyse/load_lfw.py` on the analysis branch to download the labeled LFW sample into `analyse/data`. Before running the quality and MTCNN sections, make a separate copy of that folder named `analyse/preprocessed_data`. Remove unwanted images from the copy and keep the original download for comparison.
-
-## Working with the dataset
-
-Keep images from separate capture sessions for evaluation. Photos taken a fraction of a second apart can be almost identical, which can make random train/test splits look better than performance on new images.
-
-Review duplicate images and failed face detections before training. Accuracy depends on the people, lighting, image quality, and evaluation split; the project does not include a verified accuracy benchmark.
+The earlier webcam-based project is preserved on [`archive/webcam-face-recognition`](https://github.com/AnasNexo/Facial-detection-and-recognition-/tree/archive/webcam-face-recognition).

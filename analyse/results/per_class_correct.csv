@@ -1,0 +1,11 @@
+class,FaceNet + linear SVM,FaceNet + RBF SVM,FaceNet + kNN,PCA + linear SVM,PCA + RBF SVM
+Ariel_Sharon,10,10,10,10,10
+Colin_Powell,10,10,10,10,10
+Donald_Rumsfeld,8,8,8,9,9
+George_W_Bush,10,10,10,10,10
+Gerhard_Schroeder,10,10,9,8,8
+Hugo_Chavez,9,9,10,9,10
+Jean_Chretien,9,9,8,10,10
+John_Ashcroft,10,10,10,10,10
+Junichiro_Koizumi,10,10,10,10,10
+Tony_Blair,9,9,8,10,10

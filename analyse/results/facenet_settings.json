@@ -1,0 +1,15 @@
+{
+  "model": "Facenet512",
+  "frozen": true,
+  "normalization": "Facenet",
+  "embedding_l2": true,
+  "random_state": 42,
+  "cv_folds": 5,
+  "cv_method": "StratifiedGroupKFold",
+  "cv_selection": "f1_macro",
+  "cv_selected_model": "svm_rbf",
+  "train": 398,
+  "test": 100,
+  "deepface_version": "0.0.100",
+  "sklearn_version": "1.7.2"
+}

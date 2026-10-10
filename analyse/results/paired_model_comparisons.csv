@@ -1,0 +1,11 @@
+A,B,A_correct_B_wrong,B_correct_A_wrong,discordant,p_exact,p_holm,significant_5pct
+FaceNet + linear SVM,FaceNet + RBF SVM,0,0,0,1.0,1.0,False
+FaceNet + linear SVM,FaceNet + kNN,3,1,4,0.625,1.0,False
+FaceNet + linear SVM,PCA + linear SVM,3,4,7,1.0,1.0,False
+FaceNet + linear SVM,PCA + RBF SVM,2,4,6,0.6875,1.0,False
+FaceNet + RBF SVM,FaceNet + kNN,3,1,4,0.625,1.0,False
+FaceNet + RBF SVM,PCA + linear SVM,3,4,7,1.0,1.0,False
+FaceNet + RBF SVM,PCA + RBF SVM,2,4,6,0.6875,1.0,False
+FaceNet + kNN,PCA + linear SVM,3,6,9,0.5078125,1.0,False
+FaceNet + kNN,PCA + RBF SVM,2,6,8,0.2890625,1.0,False
+PCA + linear SVM,PCA + RBF SVM,0,1,1,1.0,1.0,False

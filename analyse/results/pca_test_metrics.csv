@@ -1,0 +1,3 @@
+model,accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted,correct,test_images,cv_f1_macro,training_seconds,best_params
+pca_svm_linear,0.96,0.9642424242424242,0.96,0.9597729171413383,0.9642424242424243,0.96,0.9597729171413383,96,100,0.8425984235922316,6.903116999999838,"{""pca__n_components"": 150, ""pca__whiten"": true, ""svm__C"": 0.1}"
+pca_svm_rbf,0.97,0.9727272727272727,0.97,0.9693400167084377,0.9727272727272728,0.97,0.9693400167084377,97,100,0.8798505847437736,11.005957300001683,"{""pca__n_components"": 150, ""pca__whiten"": true, ""svm__C"": 10, ""svm__gamma"": 0.001}"

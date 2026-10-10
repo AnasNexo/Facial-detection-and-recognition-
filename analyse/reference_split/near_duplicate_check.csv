@@ -1,0 +1,2 @@
+source_a,source_b,distance,split_a,split_b,cross_split
+George_W_Bush/George_W_Bush_0034.jpg,George_W_Bush/George_W_Bush_0036.jpg,5,train,train,False

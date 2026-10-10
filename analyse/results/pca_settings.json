@@ -1,0 +1,19 @@
+{
+  "train": 398,
+  "test": 100,
+  "random_state": 42,
+  "cv": "StratifiedGroupKFold",
+  "folds": 5,
+  "selection": "f1_macro",
+  "cv_selected_model": "pca_svm_rbf",
+  "pca_components": [
+    50,
+    100,
+    150
+  ],
+  "pca_whiten": [
+    false,
+    true
+  ],
+  "pixel_standard_scaler": false
+}

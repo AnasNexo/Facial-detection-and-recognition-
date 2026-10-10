@@ -1,0 +1,12 @@
+source,image_path,class,FL,error_FL,FR,error_FR,FK,error_FK,PL,error_PL,PR,error_PR,error_count
+Donald_Rumsfeld/Donald_Rumsfeld_0005.jpg,test/Donald_Rumsfeld/Donald_Rumsfeld_0005.jpg.png,Donald_Rumsfeld,Ariel_Sharon,True,Ariel_Sharon,True,Ariel_Sharon,True,Hugo_Chavez,True,Hugo_Chavez,True,5
+Donald_Rumsfeld/Donald_Rumsfeld_0028.jpg,test/Donald_Rumsfeld/Donald_Rumsfeld_0028.jpg.png,Donald_Rumsfeld,John_Ashcroft,True,John_Ashcroft,True,John_Ashcroft,True,Donald_Rumsfeld,False,Donald_Rumsfeld,False,3
+Jean_Chretien/Jean_Chretien_0038.jpg,test/Jean_Chretien/Jean_Chretien_0038.jpg.png,Jean_Chretien,Donald_Rumsfeld,True,Donald_Rumsfeld,True,Donald_Rumsfeld,True,Jean_Chretien,False,Jean_Chretien,False,3
+Tony_Blair/Tony_Blair_0031.jpg,test/Tony_Blair/Tony_Blair_0031.jpg.png,Tony_Blair,Jean_Chretien,True,Jean_Chretien,True,Jean_Chretien,True,Tony_Blair,False,Tony_Blair,False,3
+Gerhard_Schroeder/Gerhard_Schroeder_0026.jpg,test/Gerhard_Schroeder/Gerhard_Schroeder_0026.jpg.png,Gerhard_Schroeder,Gerhard_Schroeder,False,Gerhard_Schroeder,False,Gerhard_Schroeder,False,George_W_Bush,True,George_W_Bush,True,2
+Gerhard_Schroeder/Gerhard_Schroeder_0032.jpg,test/Gerhard_Schroeder/Gerhard_Schroeder_0032.jpg.png,Gerhard_Schroeder,Gerhard_Schroeder,False,Gerhard_Schroeder,False,Gerhard_Schroeder,False,Jean_Chretien,True,Jean_Chretien,True,2
+Hugo_Chavez/Hugo_Chavez_0001.jpg,test/Hugo_Chavez/Hugo_Chavez_0001.jpg.png,Hugo_Chavez,Donald_Rumsfeld,True,Donald_Rumsfeld,True,Hugo_Chavez,False,Hugo_Chavez,False,Hugo_Chavez,False,2
+Gerhard_Schroeder/Gerhard_Schroeder_0001.jpg,test/Gerhard_Schroeder/Gerhard_Schroeder_0001.jpg.png,Gerhard_Schroeder,Gerhard_Schroeder,False,Gerhard_Schroeder,False,John_Ashcroft,True,Gerhard_Schroeder,False,Gerhard_Schroeder,False,1
+Hugo_Chavez/Hugo_Chavez_0002.jpg,test/Hugo_Chavez/Hugo_Chavez_0002.jpg.png,Hugo_Chavez,Hugo_Chavez,False,Hugo_Chavez,False,Hugo_Chavez,False,George_W_Bush,True,Hugo_Chavez,False,1
+Jean_Chretien/Jean_Chretien_0030.jpg,test/Jean_Chretien/Jean_Chretien_0030.jpg.png,Jean_Chretien,Jean_Chretien,False,Jean_Chretien,False,Donald_Rumsfeld,True,Jean_Chretien,False,Jean_Chretien,False,1
+Tony_Blair/Tony_Blair_0037.jpg,test/Tony_Blair/Tony_Blair_0037.jpg.png,Tony_Blair,Tony_Blair,False,Tony_Blair,False,Donald_Rumsfeld,True,Tony_Blair,False,Tony_Blair,False,1
