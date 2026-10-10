@@ -92,6 +92,8 @@ To run the notebook on that branch, install its additional dependencies and sele
 python -m pip install pandas matplotlib ipykernel
 ```
 
+Run `python analyse/load_lfw.py` on the analysis branch to download the labeled LFW sample into `analyse/data`. Before running the quality and MTCNN sections, make a separate copy of that folder named `analyse/preprocessed_data`. Remove unwanted images from the copy and keep the original download for comparison.
+
 ## Working with the dataset
 
 Keep images from separate capture sessions for evaluation. Photos taken a fraction of a second apart can be almost identical, which can make random train/test splits look better than performance on new images.
